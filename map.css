@@ -1,0 +1,524 @@
+/* Page layout: a panel beside the map on wide screens, one column on narrow ones. */
+.wordmark {
+  display: inline-block;
+  margin-bottom: 1.6rem;
+  color: var(--ink);
+  font: 700 0.8rem/1 var(--mono);
+  text-decoration: none;
+}
+
+.wordmark:hover {
+  color: var(--color-accent);
+}
+
+header .intro {
+  margin-top: 0.9rem;
+  max-width: 58ch;
+  font-size: 0.97rem;
+}
+
+#map {
+  position: relative;
+  flex: 1;
+  min-height: 60vh;
+  border: 1px solid var(--line);
+  background: var(--soft);
+}
+
+@media (min-width: 60em) {
+  body {
+    display: grid;
+    grid-template-columns: minmax(20em, 24em) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "header map" "filter map" "busiest map" "legend map";
+    height: 100vh;
+    height: 100dvh;
+    gap: 1.4em 1.75em;
+  }
+
+  header {
+    grid-area: header;
+  }
+
+  .time-filter {
+    grid-area: filter;
+  }
+
+  .busiest {
+    grid-area: busiest;
+    overflow: hidden;
+  }
+
+  .legend {
+    grid-area: legend;
+  }
+
+  #map {
+    grid-area: map;
+    min-height: 0;
+  }
+}
+
+/* Step 3.2: the SVG covers the map, sits above it, and lets the map take the mouse. */
+#map svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Step 6: one rule gives the circles, the legend, and the station list the same three colors.
+   Mixing in oklab passes through gray, so "balanced" reads as neutral between the two ends. */
+#map svg circle,
+.legend > div,
+#busiest li {
+  --color: color-mix(in oklab, var(--color-departures) calc(100% * var(--departure-ratio)), var(--color-arrivals));
+}
+
+#map svg circle {
+  pointer-events: auto;
+  fill: var(--color);
+  fill-opacity: 0.62;
+  stroke: var(--paper);
+  stroke-width: 1;
+  transition: r 120ms ease-out, fill 120ms ease-out, fill-opacity 120ms;
+}
+
+#map svg circle:hover {
+  fill-opacity: 0.92;
+}
+
+/* A note that takes the map's place when the map cannot be drawn. */
+.map-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  place-content: center;
+  padding: 2em;
+  background: var(--soft);
+  color: var(--muted);
+  text-align: center;
+}
+
+#map.no-map .map-fallback {
+  display: grid;
+}
+
+#map.no-map svg {
+  display: none;
+}
+
+/* Mapbox's own controls, set in the page's colors so they don't glare against the dark map. */
+#map .mapboxgl-ctrl-group {
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+#map .mapboxgl-ctrl-group button + button {
+  border-top-color: var(--line);
+}
+
+#map .mapboxgl-ctrl-group button:not(:disabled):hover {
+  background-color: var(--soft);
+}
+
+#map .mapboxgl-ctrl-attrib {
+  background: color-mix(in srgb, var(--paper) 80%, transparent);
+  color: var(--text);
+}
+
+#map .mapboxgl-ctrl-attrib a {
+  color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Mapbox draws its icons in dark gray. */
+  #map .mapboxgl-ctrl-icon,
+  #map .mapboxgl-ctrl-attrib-button {
+    filter: invert(1);
+  }
+}
+
+/* Larger zoom buttons where the pointer is a finger. */
+@media (pointer: coarse) {
+  #map .mapboxgl-ctrl-group button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Step 5.1: the time filter. */
+.time-filter {
+  border-top: 1px solid var(--ink);
+  padding-top: 0.9rem;
+}
+
+/* The label, then the time with the play button beside it, like a timecode and its transport. */
+.time-readout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.1rem 1rem;
+}
+
+.time-readout label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* The time is the page's one large numeral. With no filter, the same slot is set thin and quiet. */
+.time-readout time,
+.time-readout em {
+  display: block;
+  font-size: 2.75rem;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-readout time {
+  color: var(--ink);
+  font-weight: 760;
+}
+
+.time-readout em {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 200;
+}
+
+/* The slider lies over a chart of the day, so its handle works as a playhead.
+   The chart is inset by half the handle's width to line up with where the handle can go. */
+.scrubber {
+  --handle: 16px;
+  --chart: 60px;
+  position: relative;
+  height: calc(var(--chart) + 22px);
+  margin-top: 0.7rem;
+}
+
+#day-profile {
+  position: absolute;
+  left: calc(var(--handle) / 2);
+  top: 0;
+  width: calc(100% - var(--handle));
+  height: var(--chart);
+}
+
+.profile-area {
+  fill: var(--line);
+}
+
+.profile-window rect {
+  fill: color-mix(in oklab, var(--color-accent) 20%, transparent);
+}
+
+#time-slider {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--chart);
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: ew-resize;
+}
+
+#time-slider:disabled {
+  cursor: progress;
+  opacity: 0.4;
+}
+
+#time-slider::-webkit-slider-runnable-track {
+  height: var(--chart);
+  border-bottom: 1px solid var(--muted);
+}
+
+#time-slider::-moz-range-track {
+  height: var(--chart);
+  border-bottom: 1px solid var(--muted);
+}
+
+/* The handle is a playhead line with a round grip sitting on the axis, so it reads as something to drag. */
+#time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--handle);
+  height: var(--chart);
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 50% calc(100% - 8px), var(--color-accent) 7.5px, transparent 8px),
+    linear-gradient(var(--color-accent), var(--color-accent)) center / 2px 100% no-repeat;
+}
+
+#time-slider::-moz-range-thumb {
+  width: var(--handle);
+  height: var(--chart);
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 50% calc(100% - 8px), var(--color-accent) 7.5px, transparent 8px),
+    linear-gradient(var(--color-accent), var(--color-accent)) center / 2px 100% no-repeat;
+}
+
+.hours {
+  position: absolute;
+  left: calc(var(--handle) / 2);
+  right: calc(var(--handle) / 2);
+  top: calc(var(--chart) + 6px);
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The end labels are centered on the ends of the track. */
+.hours span:first-child {
+  transform: translateX(-30%);
+}
+
+.hours span:last-child {
+  transform: translateX(30%);
+}
+
+#play {
+  grid-column: 2;
+  min-height: 2.6rem;
+  padding: 0 1rem;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink);
+  font: 560 0.9rem/1.2 var(--serif);
+  cursor: pointer;
+}
+
+#play:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+#play[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: light-dark(#fff, #0c1230);
+}
+
+#play:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: progress;
+}
+
+/* One line under the chart: what is loading, then what the chart and the map count. */
+#status {
+  margin-top: 0.55rem;
+  color: var(--muted);
+}
+
+/* The station list. */
+.busiest {
+  border-top: 1px solid var(--ink);
+  padding-top: 0.9rem;
+}
+
+.busiest-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.1rem 1rem;
+}
+
+#busiest-scope {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#busiest {
+  margin-top: 0.4rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: station;
+}
+
+#busiest li {
+  /* Positioned, so the screen-reader text inside a row is clipped along with the row. */
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.2rem 0.7rem minmax(0, 1fr) auto;
+  gap: 0 0.55rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  counter-increment: station;
+}
+
+/* Beside the map, rows that don't fit whole are hidden rather than cut in half (fitBusiestRows in map.js). */
+.busiest[data-rows="0"],
+.busiest[data-rows="1"] li:nth-child(n + 2),
+.busiest[data-rows="2"] li:nth-child(n + 3),
+.busiest[data-rows="3"] li:nth-child(n + 4),
+.busiest[data-rows="4"] li:nth-child(n + 5) {
+  visibility: hidden;
+}
+
+#busiest li::before {
+  content: counter(station);
+  grid-column: 1;
+  grid-row: 1;
+  color: var(--muted);
+  font: 400 0.72rem/1.9 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A name takes at most two lines, split evenly so no word is left alone on the second. */
+.station-name {
+  grid-column: 3;
+  grid-row: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.94rem;
+  font-weight: 560;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.station-trips {
+  grid-column: 4;
+  grid-row: 1;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.station-flow {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-self: center;
+}
+
+/* Step 6.2: the legend, as separate swatches and labels. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.3rem;
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.legend > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.legend > div::before,
+.station-flow::before {
+  content: "";
+  width: 0.85em;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color);
+  forced-color-adjust: none;
+}
+
+.legend > .legend-lanes::before {
+  width: 1.5em;
+  height: 3px;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: var(--color-lanes);
+}
+
+/* Step 4.4: the tooltip follows the pointer and never takes it. */
+#tooltip {
+  position: fixed;
+  z-index: 10;
+  display: grid;
+  gap: 0.1rem;
+  max-width: 19rem;
+  padding: 0.65rem 0.85rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px light-dark(rgb(15 15 14 / 0.16), rgb(0 0 0 / 0.55));
+  pointer-events: none;
+}
+
+.tooltip-name {
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 560;
+  line-height: 1.3;
+}
+
+.tooltip-total {
+  color: var(--ink);
+  font-size: 1.7rem;
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Departures on the left and arrivals on the right, split at the station's own ratio. */
+.tooltip-bar {
+  height: 6px;
+  margin: 0.25rem 0 0.3rem;
+  background: linear-gradient(to right, var(--color-departures) calc(var(--departure-share) * 100%), var(--color-arrivals) 0);
+}
+
+.tooltip-split {
+  color: var(--muted);
+}
+
+/* On a short window the panel tightens, which leaves the station list room for another row. */
+@media (min-width: 60em) and (max-height: 50em) {
+  body {
+    row-gap: 1.1em;
+  }
+
+  .wordmark {
+    margin-bottom: 1.1rem;
+  }
+
+  h1 {
+    font-size: 2.75rem;
+  }
+
+  header .intro {
+    margin-top: 0.7rem;
+    font-size: 0.93rem;
+    line-height: 1.5;
+  }
+
+  .time-readout time,
+  .time-readout em {
+    font-size: 2.4rem;
+  }
+
+  .scrubber {
+    --chart: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #map svg circle {
+    transition: none;
+  }
+}

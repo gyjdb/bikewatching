@@ -1,0 +1,123 @@
+@font-face {
+  font-family: "Roboto Serif";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("assets/fonts/roboto-serif-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-stretch: 75% 112.5%;
+  font-display: swap;
+  src: url("assets/fonts/martian-mono-latin.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light dark;
+  --paper: light-dark(#f7f7f4, #121311);
+  --ink: light-dark(#0f0f0e, #f3f3ee);
+  --text: light-dark(#34342f, #c8c8c0);
+  --muted: light-dark(#62625b, #9b9b92);
+  --line: light-dark(#d5d5ce, #33342f);
+  --soft: light-dark(#ecece8, #1b1c19);
+  --color-accent: light-dark(#1e40af, #a3b8ff);
+  /* Traffic colors: equal strength and opposite hues, so their even mix is a neutral gray. */
+  --color-departures: light-dark(oklch(52% 0.17 255), oklch(70% 0.14 255));
+  --color-arrivals: light-dark(oklch(66% 0.17 75), oklch(78% 0.14 75));
+  --color-lanes: light-dark(#2f8f5b, #4fb37c);
+  --serif: "Roboto Serif", Georgia, "Times New Roman", serif;
+  --mono: "Martian Mono", ui-monospace, Consolas, monospace;
+  accent-color: var(--color-accent);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font: 100%/1.6 var(--serif);
+  font-optical-sizing: auto;
+  display: flex;
+  flex-flow: column;
+  min-height: 100vh;
+  margin: 0;
+  padding: 1.25em;
+  gap: 1.25em;
+  color: var(--text);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+p,
+ol {
+  margin: 0;
+}
+
+h1 {
+  color: var(--ink);
+  font-size: clamp(2.4rem, 4vw, 3.25rem);
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  color: var(--ink);
+  font-size: 1.2rem;
+  font-weight: 660;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* The small monospace voice, for times and counts. */
+.hours,
+#status,
+#busiest-scope,
+.station-trips,
+.station-flow,
+.tooltip-split {
+  font: 400 0.72rem/1.55 var(--mono);
+  font-stretch: 87.5%;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: light-dark(#fff, #0c1230);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Text for screen readers only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
